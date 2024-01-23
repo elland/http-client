@@ -206,7 +206,9 @@ module Network.HTTP.Client
     , equalCookieJar
     , equivCookieJar
     , Proxy (..)
+    , Reuse (..)
     , withConnection
+    , withConnection'
     , strippedHostName
       -- * Cookies
     , module Network.HTTP.Client.Cookies
