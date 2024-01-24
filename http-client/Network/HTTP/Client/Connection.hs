@@ -28,6 +28,7 @@ import qualified Control.Exception as E
 import qualified Data.ByteString as S
 import Data.Foldable (for_)
 import Data.Function (fix)
+import Data.Dynamic (toDyn, Typeable)
 import Data.Maybe (listToMaybe)
 import Data.Word (Word8)
 
@@ -90,16 +91,19 @@ dummyConnection input0 = do
         , connectionUnread = \x -> atomicModifyIORef iinput $ \input -> (x:input, ())
         , connectionWrite = \x -> atomicModifyIORef ioutput $ \output -> (output ++ [x], ())
         , connectionClose = return ()
+        , connectionRaw = toDyn ()
         }, atomicModifyIORef ioutput $ \output -> ([], output), readIORef iinput)
 
 -- | Create a new 'Connection' from a read, write, and close function.
 --
 -- @since 0.5.3
-makeConnection :: IO ByteString -- ^ read
+makeConnection :: Typeable a =>
+      IO ByteString -- ^ read
                -> (ByteString -> IO ()) -- ^ write
                -> IO () -- ^ close
+               -> a -- ^ transport, or socket
                -> IO Connection
-makeConnection r w c = do
+makeConnection r w c d = do
     istack <- newIORef []
 
     -- it is necessary to make sure we never read from or write to
@@ -132,6 +136,7 @@ makeConnection r w c = do
             w x
 
         , connectionClose = close
+        , connectionRaw = toDyn d
         }
 
 -- | Create a new 'Connection' from a 'Socket'.
@@ -144,6 +149,7 @@ socketConnection socket chunksize = makeConnection
     (recv socket chunksize)
     (sendAll socket)
     (NS.close socket)
+    socket
 
 openSocketConnection :: (Socket -> IO ())
                      -> Maybe HostAddress

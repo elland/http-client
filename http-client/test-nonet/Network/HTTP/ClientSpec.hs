@@ -307,6 +307,7 @@ spec = describe "Client" $ do
           (return S.empty)
           (const checkStatus)
           (checkStatus >> writeIORef closedRef True)
+          () -- we can pass unit here, the test doesn't care about the transport
 
         Internal.connectionClose conn
 
