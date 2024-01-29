@@ -193,7 +193,7 @@ withSocket :: (Socket -> IO ())
            -> (Socket -> IO a)
            -> IO a
 withSocket tweakSocket hostAddress' host' port' f = do
-    let hints = NS.defaultHints { NS.addrSocketType = NS.Stream }
+    let hints = NS.defaultHints { NS.addrSocketType = NS.Stream, NS.addrFlags = [ NS.AI_NUMERICSERV, NS.AI_ADDRCONFIG ] }
     addrs <- case hostAddress' of
         Nothing ->
             NS.getAddrInfo (Just hints) (Just $ strippedHostName host') (Just $ show port')
